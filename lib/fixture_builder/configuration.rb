@@ -34,6 +34,9 @@ module FixtureBuilder
       write_config
     end
 
+    # this gets called when selecting records from the database to dump into
+    # fixtures. you can use it to customize things like the order in which
+    # records are selected.
     def select_scope_proc
       @select_scope_proc ||= ->(table_class) do
         scope = table_class.unscoped
@@ -44,6 +47,9 @@ module FixtureBuilder
       end
     end
 
+    # this gets called to turn each record into a hash before dumping to yaml.
+    # you can customize it if you want to do things like leave out some fields
+    # (e.g. created_at & updated_at, which are automatically populated by Rails)
     def hashize_record_proc
       @hashize_record_proc ||= ->(record) do
         record.attributes_before_type_cast

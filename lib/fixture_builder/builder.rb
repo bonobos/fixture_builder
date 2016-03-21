@@ -95,6 +95,11 @@ module FixtureBuilder
       Date::DATE_FORMATS[:default] = Date::DATE_FORMATS[:db]
       begin
         fixtures = tables.inject([]) do |files, table_name|
+          # Always create our own Class (inheriting from ActiveRecord) so that:
+          # 1) We can always use ActiveRecord, even if the app doesn't have an
+          #    ActiveRecord model defined (e.g. some join tables)
+          # 2) We don't have to worry about default scopes and other things that
+          #    may be present on the application's class.
           table_class = Class.new(ActiveRecord::Base) { self.table_name = table_name }
 
           records = select_scope_proc.call(table_class).to_a
@@ -122,6 +127,8 @@ module FixtureBuilder
 
     def write_fixture_file(fixture_data, table_name)
       File.open(fixture_file(table_name), 'w') do |file|
+        # the gsub here removes quotes around ERB entries so that they work
+        # properly when Rails reads the fixtures.
         file.write fixture_data.to_yaml.gsub(/: "(<%.*%>)"$/, ': \1')
       end
     end
