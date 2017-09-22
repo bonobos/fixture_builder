@@ -38,12 +38,8 @@ module FixtureBuilder
     # fixtures. you can use it to customize things like the order in which
     # records are selected.
     def select_scope_proc
-      @select_scope_proc ||= ->(table_class) do
-        scope = table_class.unscoped
-        if table_class.primary_key
-          scope = scope.order(table_class.primary_key => :asc)
-        end
-        scope
+      @select_scope_proc ||= ->(records, table_name) do
+        records
       end
     end
 
@@ -51,7 +47,7 @@ module FixtureBuilder
     # you can customize it if you want to do things like leave out some fields
     # (e.g. created_at & updated_at, which are automatically populated by Rails)
     def hashize_record_proc
-      @hashize_record_proc ||= ->(record) do
+      @hashize_record_proc ||= ->(record, table_name) do
         record.attributes_before_type_cast
       end
     end

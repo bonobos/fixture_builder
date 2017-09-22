@@ -95,17 +95,13 @@ module FixtureBuilder
       Date::DATE_FORMATS[:default] = Date::DATE_FORMATS[:db]
       begin
         fixtures = tables.inject([]) do |files, table_name|
-          # Always create our own Class (inheriting from ActiveRecord) so that:
-          # 1) We can always use ActiveRecord, even if the app doesn't have an
-          #    ActiveRecord model defined (e.g. some join tables)
-          # 2) We don't have to worry about default scopes and other things that
-          #    may be present on the application's class.
-          table_class = Class.new(ActiveRecord::Base) { self.table_name = table_name }
 
-          records = select_scope_proc.call(table_class).to_a
+          records = ActiveRecord::Base.connection.select_all(select_sql % {table: ActiveRecord::Base.connection.quote_table_name(table_name)})
 
-          rows = records.map do |record|
-            hashize_record_proc.call(record)
+          sorted_records = select_scope_proc.call(records, table_name)
+
+          rows = sorted_records.map do |record|
+            hashize_record_proc.call(record, table_name)
           end
 
           next files if rows.empty?
